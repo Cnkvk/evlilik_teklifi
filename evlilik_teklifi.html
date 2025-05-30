@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Benimle Evlenir Misin?</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+      color: white;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+    }
+
+    .message {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3rem;
+      opacity: 0;
+      animation: fadeIn 3s ease-in-out 5s forwards;
+      z-index: 10;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      transform: rotate(45deg);
+      animation: float 6s ease-in infinite;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+    }
+
+    .heart::before {
+      top: -10px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: -10px;
+      top: 0;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(45deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) rotate(45deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="fireworks"></canvas>
+<div class="message">Benimle evlenir misin? 💍❤️</div>
+
+<script>
+  // Canvas ve havai fişekler
+  const canvas = document.getElementById('fireworks');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  class Firework {
+    constructor() {
+      this.reset();
+    }
+
+    reset() {
+      this.x = Math.random() * canvas.width;
+      this.y = canvas.height;
+      this.targetY = Math.random() * canvas.height / 2;
+      this.color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+      this.radius = 2;
+      this.exploded = false;
+      this.particles = [];
+    }
+
+    update() {
+      if (!this.exploded) {
+        this.y -= 5;
+        if (this.y <= this.targetY) {
+          this.exploded = true;
+          for (let i = 0; i < 100; i++) {
+            const angle = Math.random() * 2 * Math.PI;
+            const speed = Math.random() * 4;
+            this.particles.push({
+              x: this.x,
+              y: this.y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              alpha: 1,
+              color: this.color
+            });
+          }
+        }
+      } else {
+        this.particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha -= 0.01;
+        });
+        this.particles = this.particles.filter(p => p.alpha > 0);
+        if (this.particles.length === 0) this.reset();
+      }
+    }
+
+    draw() {
+      if (!this.exploded) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      } else {
+        this.particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+          ctx.fill();
+        });
+      }
+    }
+  }
+
+  const fireworks = Array.from({ length: 5 }, () => new Firework());
+
+  function animate() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    fireworks.forEach(fw => {
+      fw.update();
+      fw.draw();
+    });
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Kalpler
+  function createHeart() {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.style.left = Math.random() * window.innerWidth + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 6000);
+  }
+
+  setInterval(createHeart, 300);
+</script>
+</body>
+</html>
